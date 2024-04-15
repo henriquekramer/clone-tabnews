@@ -10,6 +10,7 @@ export default async function migrations(request, response) {
       direction: "up",
       verbose: true,
       migrationsTable: "pgmigrations",
+      noLock: true,
     });
 
     return response.status(200).json(migrations);
