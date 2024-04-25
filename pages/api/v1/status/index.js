@@ -24,7 +24,7 @@ async function status(request, response) {
 
   response.status(200).json({
     updated_at: updatedAt,
-    dependecies: {
+    dependencies: {
       database: {
         max_conections: databaseMaxConnectionsValue,
         opened_connections: databaseOpenedConnectionsValue,
