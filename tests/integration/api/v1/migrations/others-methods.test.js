@@ -22,14 +22,18 @@ async function getDataBaseStatus() {
   return await response.json();
 }
 
-test("OTHER HTTP METHODS to /api/v1/migrations should not let opened connections in database", async () => {
-  for (let method of ["HEAD", "PUT", "DELETE", "OPTIONS", "PATCH"]) {
-    await cleanDatabase();
+describe("OTHER HTTP METHODS /api/v1/migrations", () => {
+  describe("Anonymous user", () => {
+    test("Ensuring there are no open connections to the database", async () => {
+      for (let method of ["HEAD", "PUT", "DELETE", "OPTIONS", "PATCH"]) {
+        await cleanDatabase();
 
-    const migrationsResponse = await getMigrationsResponse(method);
-    expect(migrationsResponse.status).toBe(405);
+        const migrationsResponse = await getMigrationsResponse(method);
+        expect(migrationsResponse.status).toBe(405);
 
-    const status = await getDataBaseStatus();
-    expect(status.dependencies.database.opened_connections).toEqual(1);
-  }
+        const status = await getDataBaseStatus();
+        expect(status.dependencies.database.opened_connections).toEqual(1);
+      }
+    });
+  });
 });
