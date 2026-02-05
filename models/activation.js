@@ -1,9 +1,43 @@
 import email from "infra/email.js";
 import database from "infra/database.js";
 import webserver from "infra/webserver";
+import user from "models/user.js";
 import { NotFoundError } from "infra/errors";
 
 const EXPIRATION_IN_MILLISECONDS = 60 * 15 * 1000; // 15 minutes
+
+async function findOneValidById(tokenId) {
+  const activationTokenObject = await runSelectQuery(tokenId);
+  return activationTokenObject;
+
+  async function runSelectQuery(tokenId) {
+    const results = await database.query({
+      text: `
+        SELECT
+          *
+        FROM
+          user_activation_tokens
+        WHERE
+          id = $1
+          AND expires_at > NOW()
+          AND used_at IS NULL
+        LIMIT
+          1
+      ;`,
+      values: [tokenId],
+    });
+
+    if (results.rowCount === 0) {
+      throw new NotFoundError({
+        message:
+          "O token de ativação utilizado não foi encontrado no sistema ou expirou.",
+        action: "Faça um novo cadastro.",
+      });
+    }
+
+    return results.rows[0];
+  }
+}
 
 async function create(userId) {
   const expiresAt = new Date(Date.now() + EXPIRATION_IN_MILLISECONDS);
@@ -41,43 +75,40 @@ Equipe Fintab!
   });
 }
 
-async function findOneValidById(tokenId) {
-  const activationTokenObject = await runSelectQuery(tokenId);
-  return activationTokenObject;
+async function markTokenAsUsed(activationToken) {
+  const usedActivationToken = await runUpdateQuery(activationToken);
+  return usedActivationToken;
 
-  async function runSelectQuery(tokenId) {
+  async function runUpdateQuery(activationToken) {
     const results = await database.query({
       text: `
-        SELECT
-          *
-        FROM
-          user_activation_tokens
-        WHERE
-          id = $1
-          AND expires_at > NOW()
-          AND used_at IS NULL
-        LIMIT
-          1
-      ;`,
-      values: [tokenId],
+          UPDATE
+            user_activation_tokens
+          SET
+            used_at = timezone('utc', now()),
+            updated_at = timezone('utc', now())
+          WHERE
+            id = $1
+          RETURNING
+            *
+        ;`,
+      values: [activationToken],
     });
-
-    if (results.rowCount === 0) {
-      throw new NotFoundError({
-        message:
-          "O token de ativação utilizado não foi encontrado no sistema ou expirou.",
-        action: "Faça um novo cadastro.",
-      });
-    }
-
     return results.rows[0];
   }
+}
+
+async function activateUserByUserId(userId) {
+  const activatedUser = await user.setFeatures(userId, ["create:session"]);
+  return activatedUser;
 }
 
 const activation = {
   sendEmailToUser,
   create,
   findOneValidById,
+  markTokenAsUsed,
+  activateUserByUserId,
 };
 
 export default activation;
