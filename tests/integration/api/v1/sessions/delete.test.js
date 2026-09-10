@@ -1,5 +1,5 @@
 import setCookieParser from "set-cookie-parser";
-
+import webserver from "infra/webserver.js";
 import orchestrator from "tests/orchestrator.js";
 import session from "models/session.js";
 
@@ -15,7 +15,7 @@ describe("DELETE /api/v1/sessions", () => {
       const nonexistentToken =
         "54fc401247596ca03e113aedc6723d6d4fd89e713c1f44ee57354bf0fadc1a8b8f9290316c5df240542978d47fde2205";
 
-      const response = await fetch("http://localhost:3000/api/v1/sessions", {
+      const response = await fetch(`${webserver.origin}/api/v1/sessions`, {
         method: "DELETE",
         headers: {
           Cookie: `session_id=${nonexistentToken}`,
@@ -53,11 +53,11 @@ describe("DELETE /api/v1/sessions", () => {
       });
 
       const createdUser = await orchestrator.createUser();
-      const sessionObject = await orchestrator.createSession(createdUser.id);
+      const sessionObject = await orchestrator.createSession(createdUser);
 
       jest.useRealTimers();
 
-      const response = await fetch("http://localhost:3000/api/v1/sessions", {
+      const response = await fetch(`${webserver.origin}/api/v1/sessions`, {
         method: "DELETE",
         headers: {
           Cookie: `session_id=${sessionObject.token}`,
@@ -91,9 +91,9 @@ describe("DELETE /api/v1/sessions", () => {
 
     test("With valid session", async () => {
       const createdUser = await orchestrator.createUser();
-      const sessionObject = await orchestrator.createSession(createdUser.id);
+      const sessionObject = await orchestrator.createSession(createdUser);
 
-      const response = await fetch("http://localhost:3000/api/v1/sessions", {
+      const response = await fetch(`${webserver.origin}/api/v1/sessions`, {
         method: "DELETE",
         headers: {
           Cookie: `session_id=${sessionObject.token}`,
@@ -135,7 +135,7 @@ describe("DELETE /api/v1/sessions", () => {
 
       // Double check assertions
       const doubleCheckResponse = await fetch(
-        "http://localhost:3000/api/v1/user",
+        `${webserver.origin}/api/v1/user`,
         {
           headers: {
             Cookie: `session_id=${sessionObject.token}`,
