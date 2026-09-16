@@ -1,5 +1,19 @@
+import DefaultLayout from "interface/DefaultLayout";
+
 function Home() {
-  return <h1>Bia, eu amo você. Se você me ama, dá uma risadinha! 🥰🥰</h1>;
+  return (
+    <DefaultLayout
+      metadata={{
+        description:
+          "Menos ruído, mais fundamentos: Um lugar para inteligência coletiva dos investidores.",
+      }}
+    >
+      <h1>
+        Menos ruído, mais fundamentos: Um lugar para inteligência coletiva dos
+        investidores.
+      </h1>
+    </DefaultLayout>
+  );
 }
 
 export default Home;
